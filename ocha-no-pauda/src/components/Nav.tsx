@@ -14,12 +14,18 @@ const LINKS = [
 
 export default function Nav() {
   const { count, setOpen } = useCart();
-  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [menu, setMenu] = useState(false);
 
+  // no background bar: slide the nav away while scrolling down, bring it back on scroll up
   useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 40);
-    on();
+    let last = window.scrollY;
+    const on = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 6) return;
+      setHidden(y > last && y > 120);
+      last = y;
+    };
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
@@ -35,14 +41,12 @@ export default function Nav() {
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1.9, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed inset-x-0 top-0 z-50 transition-[background,backdrop-filter,border-color] duration-700 ${
-          scrolled ? "border-b border-gold/10 bg-abyss/55 backdrop-blur-xl" : "border-b border-transparent"
-        }`}
+        className="pointer-events-none fixed inset-x-0 top-0 z-50 text-white mix-blend-difference"
       >
-        <nav className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-8 md:h-20 md:px-12">
+        <nav className={`pointer-events-auto mx-auto flex h-16 transition-transform duration-700 ease-luxe ${hidden && !menu ? "-translate-y-full" : "translate-y-0"} max-w-[1600px] items-center justify-between px-4 sm:px-8 md:h-20 md:px-12`}>
           <button onClick={() => go("top")} className="group flex items-baseline gap-3" aria-label="Ocha no Pauda — home">
-            <span className="font-display text-xl italic tracking-tight text-cream sm:text-2xl">Ocha no Pauda</span>
-            <span className="hidden font-mincho text-xs tracking-[0.3em] text-gold/80 sm:inline">お茶のパウダー</span>
+            <span className="font-display text-xl italic tracking-tight text-white sm:text-2xl">Ocha no Pauda</span>
+            <span className="hidden font-mincho text-xs tracking-[0.3em] text-white/70 sm:inline">お茶のパウダー</span>
           </button>
 
           <ul className="hidden items-center gap-10 md:flex">
@@ -50,10 +54,10 @@ export default function Nav() {
               <li key={l.id}>
                 <button
                   onClick={() => go(l.id)}
-                  className="group relative text-[11px] font-medium uppercase tracking-[0.28em] text-cream/80 transition-colors hover:text-cream"
+                  className="group relative text-[11px] font-medium uppercase tracking-[0.28em] text-white/85 transition-colors hover:text-white"
                 >
                   {l.label}
-                  <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-gold transition-transform duration-500 ease-luxe group-hover:scale-x-100" />
+                  <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-500 ease-luxe group-hover:scale-x-100" />
                 </button>
               </li>
             ))}
@@ -62,11 +66,11 @@ export default function Nav() {
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setOpen(true)}
-              className="group relative flex items-center gap-2.5 rounded-full border border-cream/15 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-cream/90 transition-colors duration-500 hover:border-gold/60 hover:text-cream"
+              className="group relative flex items-center gap-2.5 rounded-full border border-white/50 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-white transition-colors duration-500 hover:border-white hover:text-white"
               aria-label={`Open bag, ${count} items`}
             >
               Bag
-              <span className="relative grid h-5 min-w-5 place-items-center overflow-hidden rounded-full bg-gold px-1 text-[10px] font-semibold tracking-normal text-abyss">
+              <span className="relative grid h-5 min-w-5 place-items-center overflow-hidden rounded-full bg-white px-1 text-[10px] font-semibold tracking-normal text-black">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.span
                     key={count}
@@ -86,8 +90,8 @@ export default function Nav() {
               aria-label="Menu"
               aria-expanded={menu}
             >
-              <span className={`absolute left-2 right-2 h-px bg-cream transition-all duration-500 ${menu ? "top-1/2 rotate-45" : "top-[42%]"}`} />
-              <span className={`absolute left-2 right-2 h-px bg-cream transition-all duration-500 ${menu ? "top-1/2 -rotate-45" : "top-[58%]"}`} />
+              <span className={`absolute left-2 right-2 h-px bg-white transition-all duration-500 ${menu ? "top-1/2 rotate-45" : "top-[42%]"}`} />
+              <span className={`absolute left-2 right-2 h-px bg-white transition-all duration-500 ${menu ? "top-1/2 -rotate-45" : "top-[58%]"}`} />
             </button>
           </div>
         </nav>

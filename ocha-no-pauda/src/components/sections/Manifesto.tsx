@@ -41,6 +41,13 @@ export default function Manifesto() {
           scrollTrigger: { trigger: root.current, start: "top bottom", end: "bottom top", scrub: true },
         },
       );
+      // fade the words away as the section leaves, so they never slide across the tin
+      gsap.to("[data-manifesto-copy]", {
+        opacity: 0,
+        y: -40,
+        ease: "none",
+        scrollTrigger: { trigger: root.current, start: "bottom bottom", end: "bottom 55%", scrub: true },
+      });
       gsap.fromTo(
         "[data-kicker]",
         { opacity: 0 },
@@ -60,7 +67,7 @@ export default function Manifesto() {
         >
           月光
         </span>
-        <div className="relative mx-auto w-full max-w-[1600px] text-center md:text-left">
+        <div data-manifesto-copy className="relative mx-auto w-full max-w-[1600px] text-center md:text-left">
           <p data-kicker className="mb-8 text-[10px] uppercase tracking-[0.5em] text-gold">Getsukō · Imperial Grade</p>
           <h2 className="font-display font-light leading-[0.98] text-cream">
             {LINES.map((l, i) => (
