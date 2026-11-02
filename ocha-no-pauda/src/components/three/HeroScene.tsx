@@ -60,7 +60,8 @@ function Rig() {
     root.current.position.x = damp(root.current.position.x, x, 4, dt);
     root.current.position.y = damp(root.current.position.y, y, 4, dt);
     root.current.scale.setScalar(damp(root.current.scale.x, s, 4, dt));
-    root.current.rotation.x = damp(root.current.rotation.x, 0.12 + stage.pointerY * 0.12, 3, dt);
+    // tipped toward the camera like the product photos, so the lid (and its sticker) shows
+    root.current.rotation.x = damp(root.current.rotation.x, 0.3 + stage.pointerY * 0.1, 3, dt);
     root.current.rotation.z = damp(root.current.rotation.z, -stage.pointerX * 0.06, 3, dt);
 
     // ── rotation: slow turntable + scroll + variant spin ──

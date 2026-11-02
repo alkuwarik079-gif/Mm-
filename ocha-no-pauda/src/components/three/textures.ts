@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { TinVariant } from "@/lib/products";
+import { asset } from "@/lib/asset";
 
 /**
  * All tin artwork is drawn procedurally onto canvases so the 3D model
@@ -10,8 +11,8 @@ import type { TinVariant } from "@/lib/products";
 
 /** Proportions taken from the product photos. */
 export const TIN_DIMS: Record<TinVariant, { r: number; h: number; lid: number }> = {
-  // Saemidori: taller, slimmer silver tin with a deep lid
-  silver: { r: 0.74, h: 1.95, lid: 0.6 },
+  // Saemidori: measured from the product photo — about as tall as it is wide
+  silver: { r: 0.8, h: 1.6, lid: 0.48 },
   // Getsukō: slightly squatter red lacquer tin with a shorter lid
   red: { r: 0.8, h: 1.8, lid: 0.48 },
 };
@@ -24,6 +25,27 @@ let SERIF = '"Times New Roman", serif';
 let SANS = '"Helvetica Neue", Arial, sans-serif';
 let JP = '"Hiragino Mincho ProN", "Yu Mincho", serif';
 let TIN = SERIF;
+
+/** artwork cut straight from the product photos (label unwrapped from the curved tin) */
+const IMAGES: { label?: HTMLImageElement; sticker?: HTMLImageElement } = {};
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement | undefined>((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(undefined);
+    img.src = src;
+  });
+}
+
+/** paint `img` onto ctx as a solid colour, using the image's alpha as the shape */
+function stamp(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, color: string) {
+  const [t, tc] = canvas(Math.ceil(w), Math.ceil(h));
+  tc.drawImage(img, 0, 0, w, h);
+  tc.globalCompositeOperation = "source-in";
+  tc.fillStyle = color;
+  tc.fillRect(0, 0, w, h);
+  ctx.drawImage(t, x, y);
+}
 
 /** next/font hashes family names, so read the real stacks from CSS variables */
 function resolveFonts() {
@@ -172,7 +194,7 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
 
   if (variant === "silver") {
     // ── matte satin silver body ────────────────────────────
-    grain(ctx, BODY_W, BODY_H, [206, 208, 211], 30);
+    grain(ctx, BODY_W, BODY_H, [196, 197, 199], 30);
     // soft vertical tonal banding so the light reads as a satin finish
     const band = ctx.createLinearGradient(0, 0, 0, BODY_H);
     band.addColorStop(0, "rgba(255,255,255,0.06)");
@@ -189,56 +211,66 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
     }
     mctx.putImageData(md, 0, 0);
 
-    // ── pale yellow scalloped label, sitting low on the body ──
-    const lw = 1.08 * PX;
-    const lh = 0.74 * PX;
-    const lx = cx - lw / 2;
-    const ly = BODY_H * 0.64 - lh / 2;
-    scallopPath(ctx, lx, ly, lw, lh, 8);
-    ctx.fillStyle = "#ece08f";
-    ctx.fill();
-    // faint paper texture
-    ctx.save();
-    ctx.clip();
-    for (let i = 0; i < 900; i++) {
-      ctx.fillStyle = `rgba(120,100,20,${Math.random() * 0.05})`;
-      ctx.fillRect(lx + Math.random() * lw, ly + Math.random() * lh, 2, 2);
-    }
-    ctx.restore();
-    scallopPath(mctx, lx, ly, lw, lh, 8);
-    mctx.fillStyle = "rgb(0,225,0)";
-    mctx.fill();
+    if (IMAGES.label) {
+      // the real label, unwrapped from the photo: 0.98 × 0.78 units, 0.62 below the rim
+      const lw = 0.98 * PX;
+      const lh = 0.78 * PX;
+      const lx = cx - lw / 2;
+      const ly = 0.62 * PX;
+      ctx.drawImage(IMAGES.label, lx, ly, lw, lh);
+      stamp(mctx, IMAGES.label, lx, ly, lw, lh, "rgb(0,225,0)");
+    } else {
+      // ── pale yellow scalloped label, sitting low on the body ──
+      const lw = 1.08 * PX;
+      const lh = 0.74 * PX;
+      const lx = cx - lw / 2;
+      const ly = BODY_H * 0.64 - lh / 2;
+      scallopPath(ctx, lx, ly, lw, lh, 8);
+      ctx.fillStyle = "#ece08f";
+      ctx.fill();
+      // faint paper texture
+      ctx.save();
+      ctx.clip();
+      for (let i = 0; i < 900; i++) {
+        ctx.fillStyle = `rgba(120,100,20,${Math.random() * 0.05})`;
+        ctx.fillRect(lx + Math.random() * lw, ly + Math.random() * lh, 2, 2);
+      }
+      ctx.restore();
+      scallopPath(mctx, lx, ly, lw, lh, 8);
+      mctx.fillStyle = "rgb(0,225,0)";
+      mctx.fill();
 
-    const L = (f: number) => lx + lw * f;
-    const T = (f: number) => ly + lh * f;
-    ctx.fillStyle = "#111008";
-    ctx.textBaseline = "alphabetic";
-    ctx.textAlign = "left";
-    ctx.font = `600 19px ${JP}`;
-    ctx.fillText("お茶のパウダー", L(0.07), T(0.15));
-    ctx.font = `bold 30px Georgia, "Bookman Old Style", ${SERIF}`;
-    ctx.fillText("茶", L(0.07), T(0.24));
-    ctx.textAlign = "right";
-    ctx.font = `800 19px ${SERIF}`;
-    ctx.fillText("MATCHA", L(0.92), T(0.15));
-    ctx.font = `600 16px ${JP}`;
-    ctx.fillText("抹茶", L(0.92), T(0.4));
-    ctx.textAlign = "left";
-    ctx.font = `italic 800 70px ${SANS}`;
-    ctx.fillText("OCHA NO PAUDA", L(0.05), T(0.36));
-    ctx.textAlign = "center";
-    ctx.font = `bold 44px Georgia, "Bookman Old Style", ${SERIF}`;
-    ctx.fillText("Grade Ceremonial", L(0.5), T(0.52));
-    ctx.textAlign = "left";
-    ctx.font = `bold 42px Georgia, "Bookman Old Style", ${SERIF}`;
-    ctx.fillText("Origin", L(0.07), T(0.66));
-    ctx.fillText("Cultivar", L(0.07), T(0.79));
-    ctx.textAlign = "right";
-    ctx.fillText("Kagoshima", L(0.93), T(0.66));
-    ctx.fillText("Saemidori", L(0.93), T(0.79));
-    ctx.textAlign = "center";
-    ctx.font = `700 20px ${SERIF}`;
-    ctx.fillText("30g", L(0.5), T(0.93));
+      const L = (f: number) => lx + lw * f;
+      const T = (f: number) => ly + lh * f;
+      ctx.fillStyle = "#111008";
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
+      ctx.font = `600 19px ${JP}`;
+      ctx.fillText("お茶のパウダー", L(0.07), T(0.15));
+      ctx.font = `bold 30px Georgia, "Bookman Old Style", ${SERIF}`;
+      ctx.fillText("茶", L(0.07), T(0.24));
+      ctx.textAlign = "right";
+      ctx.font = `800 19px ${SERIF}`;
+      ctx.fillText("MATCHA", L(0.92), T(0.15));
+      ctx.font = `600 16px ${JP}`;
+      ctx.fillText("抹茶", L(0.92), T(0.4));
+      ctx.textAlign = "left";
+      ctx.font = `italic 800 70px ${SANS}`;
+      ctx.fillText("OCHA NO PAUDA", L(0.05), T(0.36));
+      ctx.textAlign = "center";
+      ctx.font = `bold 44px Georgia, "Bookman Old Style", ${SERIF}`;
+      ctx.fillText("Grade Ceremonial", L(0.5), T(0.52));
+      ctx.textAlign = "left";
+      ctx.font = `bold 42px Georgia, "Bookman Old Style", ${SERIF}`;
+      ctx.fillText("Origin", L(0.07), T(0.66));
+      ctx.fillText("Cultivar", L(0.07), T(0.79));
+      ctx.textAlign = "right";
+      ctx.fillText("Kagoshima", L(0.93), T(0.66));
+      ctx.fillText("Saemidori", L(0.93), T(0.79));
+      ctx.textAlign = "center";
+      ctx.font = `700 20px ${SERIF}`;
+      ctx.fillText("30g", L(0.5), T(0.93));
+    }
   } else {
     // ── glossy red lacquer body ────────────────────────────
     const g = ctx.createLinearGradient(0, 0, 0, BODY_H);
@@ -292,8 +324,12 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
   // ── lid top ─────────────────────────────────────────────
   const [t, tctx] = canvas(1024, 1024);
   if (variant === "silver") {
-    grain(tctx, 1024, 1024, [208, 210, 213], 28);
-    drawSticker(tctx, 512, 500, 420);
+    grain(tctx, 1024, 1024, [196, 197, 199], 28);
+    if (IMAGES.sticker) {
+      const w = 480;
+      const h = (w * IMAGES.sticker.height) / IMAGES.sticker.width;
+      tctx.drawImage(IMAGES.sticker, 512 - w / 2, 505 - h / 2, w, h);
+    } else drawSticker(tctx, 512, 500, 420);
   } else {
     tctx.fillStyle = "#c22a1f";
     tctx.fillRect(0, 0, 1024, 1024);
@@ -350,6 +386,10 @@ export async function ensureFonts() {
   if (typeof document === "undefined" || !document.fonts) return;
   resolveFonts();
   const sample = "Ocha no Pauda GETSUKŌ お茶のパウダー茶月光抹茶 30g";
+  const imgs = Promise.all([
+    loadImage(asset("/img/tin/silver-label.png")).then((i) => (IMAGES.label = i)),
+    loadImage(asset("/img/tin/silver-sticker.png")).then((i) => (IMAGES.sticker = i)),
+  ]);
   try {
     await Promise.race([
       Promise.all([
@@ -362,5 +402,6 @@ export async function ensureFonts() {
       ]),
       new Promise((r) => setTimeout(r, 2500)),
     ]);
+    await Promise.race([imgs, new Promise((r) => setTimeout(r, 4000))]);
   } catch {}
 }

@@ -31,7 +31,8 @@ jobs:
         with:
           enablement: true
       - run: npm ci
-      - run: npm run build
+      # Google Fonts downloads occasionally time out on runners — retry before failing
+      - run: npm run build || (sleep 20 && npm run build) || (sleep 40 && npm run build)
         env:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
