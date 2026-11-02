@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { asset } from "@/lib/asset";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,7 +48,7 @@ export default function Story() {
         <div className="mt-24 grid gap-6 md:mt-32 md:grid-cols-12 md:gap-8">
           <figure className="relative aspect-[3/4] overflow-hidden rounded-sm md:col-span-5 md:row-span-2" data-fade>
             <div className="absolute -inset-y-[15%] inset-x-0" data-speed="0.25">
-              <Image src="/img/whisks-dark.jpg" alt="Chasen whisks with star charms in their cases" fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
+              <Image src={asset("/img/whisks-dark.jpg")} alt="Chasen whisks with star charms in their cases" fill sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
             </div>
             <figcaption className="absolute bottom-4 left-4 text-[9px] uppercase tracking-[0.3em] text-cream/70">茶筅 · Chasen</figcaption>
           </figure>
@@ -81,7 +82,7 @@ export default function Story() {
 
           <figure className="relative aspect-[16/10] overflow-hidden rounded-sm md:col-span-6 md:col-start-7" data-fade>
             <div className="absolute -inset-y-[15%] inset-x-0" data-speed="0.2">
-              <Image src="/img/shelf.jpg" alt="Shakers, silver tins and whisks on the Ocha no Pauda shelf" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover object-[50%_40%]" />
+              <Image src={asset("/img/shelf.jpg")} alt="Shakers, silver tins and whisks on the Ocha no Pauda shelf" fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover object-[50%_40%]" />
             </div>
             <figcaption className="absolute bottom-4 left-4 text-[9px] uppercase tracking-[0.3em] text-cream/70">The shelf · 棚</figcaption>
           </figure>

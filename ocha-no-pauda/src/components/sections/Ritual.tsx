@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ritual } from "@/lib/scene-state";
+import { asset } from "@/lib/asset";
 
 const RitualScene = dynamic(() => import("../three/RitualScene"), { ssr: false });
 
@@ -112,7 +113,7 @@ export default function Ritual() {
 
         {/* the real whisk, as a print in the corner */}
         <div className="absolute bottom-8 right-8 hidden h-56 w-40 overflow-hidden rounded-sm bg-paper shadow-2xl lg:block">
-          <Image src="/img/whisk.jpg" alt="Ocha no Pauda chasen with gold star charm" fill sizes="160px" className="object-contain p-3 mix-blend-multiply" />
+          <Image src={asset("/img/whisk.jpg")} alt="Ocha no Pauda chasen with gold star charm" fill sizes="160px" className="object-contain p-3 mix-blend-multiply" />
           <span className="absolute inset-x-0 bottom-0 bg-forest/90 px-3 py-2 text-[9px] uppercase tracking-[0.28em] text-cream">Chasen · star charm</span>
         </div>
       </div>
