@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { asset } from "@/lib/asset";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,7 +17,7 @@ const ORIGINS = [
     grade: "Imperial Grade",
     cultivar: "Okumidori · Yabukita",
     body: "Misty river valleys and cool nights give Yame leaves their famous depth: a full-bodied, nutty umami with a whisper of dark chocolate.",
-    image: "/img/red-tin.jpg",
+    image: asset("/img/red-tin.jpg"),
     tone: "bg-[#fcf4df]",
   },
   {
@@ -27,7 +28,7 @@ const ORIGINS = [
     grade: "Ceremonial Grade",
     cultivar: "Saemidori",
     body: "Volcanic soil and southern sun at the tip of Kyūshū. The Saemidori cultivar is prized for its vivid colour, natural sweetness and buttery texture.",
-    image: "/img/silver-tin.jpg",
+    image: asset("/img/silver-tin.jpg"),
     tone: "bg-[#fdfdfd]",
   },
 ];
