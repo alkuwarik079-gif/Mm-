@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Manrope, Shippori_Mincho } from "next/font/google";
+import { Cormorant_Garamond, Cormorant_Upright, Manrope, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 
 const serif = Cormorant_Garamond({
@@ -7,6 +7,14 @@ const serif = Cormorant_Garamond({
   weight: ["300", "400", "500", "600"],
   style: ["normal", "italic"],
   variable: "--font-serif",
+  display: "swap",
+});
+
+// calligraphic upright serif used for the print on the red Getsukō tin
+const tinSerif = Cormorant_Upright({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+  variable: "--font-tin",
   display: "swap",
 });
 
@@ -39,7 +47,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${jp.variable}`}>
+    <html lang="en" className={`${serif.variable} ${tinSerif.variable} ${sans.variable} ${jp.variable}`}>
       <body className="grain">{children}</body>
     </html>
   );
