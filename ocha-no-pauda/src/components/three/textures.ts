@@ -322,15 +322,18 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
   }
 
   // ── lid top ─────────────────────────────────────────────
-  const [t, tctx] = canvas(1024, 1024);
+  // 2048px so the stickers stay crisp; drawing coordinates stay in a 1024 space
+  const [t, tctx] = canvas(2048, 2048);
   if (variant === "silver") {
-    grain(tctx, 1024, 1024, [196, 197, 199], 28);
+    grain(tctx, 2048, 2048, [196, 197, 199], 28);
+    tctx.scale(2, 2);
     if (IMAGES.sticker) {
       const w = 480;
       const h = (w * IMAGES.sticker.height) / IMAGES.sticker.width;
       tctx.drawImage(IMAGES.sticker, 512 - w / 2, 505 - h / 2, w, h);
     } else drawSticker(tctx, 512, 500, 420);
   } else {
+    tctx.scale(2, 2);
     tctx.fillStyle = "#c22a1f";
     tctx.fillRect(0, 0, 1024, 1024);
     // pressed ring near the edge of the lid
