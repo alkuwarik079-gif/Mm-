@@ -46,7 +46,7 @@ function Rig() {
     // ── position choreography across hero → manifesto → collection ──
     const heroX = mobile ? 0 : 1.5;
     // on phones keep the whole tin (and its lifting lid) below the nav bar
-    const heroY = mobile ? 0.95 : -0.12;
+    const heroY = mobile ? 1.24 : -0.12;
     // hero (right) → manifesto (right, lid open, text on the left) → collection (left)
     let x = THREE.MathUtils.lerp(heroX, mobile ? 0 : 1.55, h);
     let y = THREE.MathUtils.lerp(heroY, mobile ? 0.5 : -0.35, h);
@@ -61,7 +61,7 @@ function Rig() {
     root.current.position.y = damp(root.current.position.y, y, 4, dt);
     root.current.scale.setScalar(damp(root.current.scale.x, s, 4, dt));
     // tipped toward the camera like the product photos, so the lid (and its sticker) shows
-    root.current.rotation.x = damp(root.current.rotation.x, 0.3 + stage.pointerY * 0.1, 3, dt);
+    root.current.rotation.x = damp(root.current.rotation.x, 0.42 + stage.pointerY * 0.08, 3, dt);
     root.current.rotation.z = damp(root.current.rotation.z, -stage.pointerX * 0.06, 3, dt);
 
     // ── rotation: slow turntable + scroll + variant spin ──
@@ -96,7 +96,7 @@ function Rig() {
           <Tin ref={red} variant="red" open={openRef} />
           <Tin ref={silver} variant="silver" open={openRef} />
         </group>
-        <Steam amount={steamRef} position={[0, 0.9, 0]} />
+        <Steam amount={steamRef} position={[0, 0.72, 0]} />
         <ContactShadows position={[0, FLOOR_Y + 0.01, 0]} scale={6} blur={2.6} opacity={0.55} far={2} resolution={512} color="#02120c" />
       </group>
       <Powder count={size.width < 768 ? 320 : 720} burst={burstRef} />

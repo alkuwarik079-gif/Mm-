@@ -12,9 +12,9 @@ import { asset } from "@/lib/asset";
 /** Proportions taken from the product photos. */
 export const TIN_DIMS: Record<TinVariant, { r: number; h: number; lid: number }> = {
   // Saemidori: measured from the product photo — about as tall as it is wide
-  silver: { r: 0.8, h: 1.6, lid: 0.48 },
+  silver: { r: 0.8, h: 1.32, lid: 0.42 },
   // Getsukō: slightly squatter red lacquer tin with a shorter lid
-  red: { r: 0.8, h: 1.8, lid: 0.48 },
+  red: { r: 0.8, h: 1.45, lid: 0.4 },
 };
 
 export const BODY_W = 3072;
@@ -212,11 +212,13 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
     mctx.putImageData(md, 0, 0);
 
     if (IMAGES.label) {
-      // the real label, unwrapped from the photo: 0.98 × 0.78 units, 0.62 below the rim
-      const lw = 0.98 * PX;
-      const lh = 0.78 * PX;
+      // the real label, unwrapped from the photo; sized from the tin height so it
+      // keeps the same place and proportions as on the real tin
+      const H = TIN_DIMS.silver.h;
+      const lh = 0.49 * H * PX;
+      const lw = lh * (0.98 / 0.78);
       const lx = cx - lw / 2;
-      const ly = 0.62 * PX;
+      const ly = 0.385 * H * PX;
       ctx.drawImage(IMAGES.label, lx, ly, lw, lh);
       stamp(mctx, IMAGES.label, lx, ly, lw, lh, "rgb(0,225,0)");
     } else {
@@ -349,7 +351,7 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
     tctx.stroke();
     // the sticker on the real Getsukō lid, turned right side up
     if (IMAGES.redSticker) {
-      const w = 470;
+      const w = 560;
       const h = (w * IMAGES.redSticker.height) / IMAGES.redSticker.width;
       tctx.drawImage(IMAGES.redSticker, 512 - w / 2, 512 - h / 2, w, h);
     }

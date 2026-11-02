@@ -7,7 +7,7 @@ import type { TinVariant } from "@/lib/products";
 import { makeTinTextures, TIN_DIMS } from "./textures";
 
 /** every tin stands on the same floor line so the contact shadow fits both */
-export const FLOOR_Y = -0.95;
+export const FLOOR_Y = -0.72;
 
 /** Lathe profile of the lid: a slightly wider sleeve with rolled edges. */
 function lidProfile(R: number, LID_H: number) {
