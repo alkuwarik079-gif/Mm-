@@ -6,7 +6,7 @@ import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import * as THREE from "three";
 import { stage, variantStore } from "@/lib/scene-state";
 import type { TinVariant } from "@/lib/products";
-import { Tin } from "./Tin";
+import { FLOOR_Y, Tin } from "./Tin";
 import { Powder, Steam, StudioLights } from "./Atmosphere";
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -45,13 +45,14 @@ function Rig() {
 
     // ── position choreography across hero → manifesto → collection ──
     const heroX = mobile ? 0 : 1.5;
-    const heroY = mobile ? 1.2 : -0.12;
+    // on phones keep the whole tin (and its lifting lid) below the nav bar
+    const heroY = mobile ? 0.95 : -0.12;
     // hero (right) → manifesto (right, lid open, text on the left) → collection (left)
     let x = THREE.MathUtils.lerp(heroX, mobile ? 0 : 1.55, h);
-    let y = THREE.MathUtils.lerp(heroY, mobile ? 1.0 : -0.35, h);
-    let s = THREE.MathUtils.lerp(mobile ? 0.46 : 0.92, mobile ? 0.48 : 0.85, h);
+    let y = THREE.MathUtils.lerp(heroY, mobile ? 0.5 : -0.35, h);
+    let s = THREE.MathUtils.lerp(mobile ? 0.46 : 0.92, mobile ? 0.5 : 0.85, h);
     x = THREE.MathUtils.lerp(x, mobile ? 0 : -1.7, c);
-    y = THREE.MathUtils.lerp(y, mobile ? 1.15 : -0.12, c);
+    y = THREE.MathUtils.lerp(y, mobile ? 1.0 : -0.12, c);
     s = THREE.MathUtils.lerp(s, mobile ? 0.42 : 0.9, c);
 
     // a gentle float, plus pointer parallax
@@ -95,7 +96,7 @@ function Rig() {
           <Tin ref={silver} variant="silver" open={openRef} />
         </group>
         <Steam amount={steamRef} position={[0, 0.9, 0]} />
-        <ContactShadows position={[0, -0.94, 0]} scale={6} blur={2.6} opacity={0.55} far={2} resolution={512} color="#02120c" />
+        <ContactShadows position={[0, FLOOR_Y + 0.01, 0]} scale={6} blur={2.6} opacity={0.55} far={2} resolution={512} color="#02120c" />
       </group>
       <Powder count={size.width < 768 ? 320 : 720} burst={burstRef} />
     </>
