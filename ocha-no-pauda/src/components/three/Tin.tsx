@@ -70,7 +70,7 @@ export const Tin = forwardRef<THREE.Group, TinProps>(function Tin({ variant, ope
       envMapIntensity: isRed ? 1.1 : 1.0,
     });
     const lidOuter = new THREE.MeshPhysicalMaterial({
-      color: isRed ? "#c22a1f" : "#cfd1d4",
+      color: isRed ? "#c22a1f" : "#c4c5c8",
       metalness: isRed ? 0.2 : 0.6,
       roughness: isRed ? 0.18 : 0.48,
       clearcoat: isRed ? 1 : 0,
