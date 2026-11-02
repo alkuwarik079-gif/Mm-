@@ -27,7 +27,7 @@ let JP = '"Hiragino Mincho ProN", "Yu Mincho", serif';
 let TIN = SERIF;
 
 /** artwork cut straight from the product photos (label unwrapped from the curved tin) */
-const IMAGES: { label?: HTMLImageElement; sticker?: HTMLImageElement } = {};
+const IMAGES: { label?: HTMLImageElement; sticker?: HTMLImageElement; redSticker?: HTMLImageElement } = {};
 function loadImage(src: string) {
   return new Promise<HTMLImageElement | undefined>((resolve) => {
     const img = new Image();
@@ -344,6 +344,12 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
     tctx.beginPath();
     tctx.arc(512, 512, 462, 0, Math.PI * 2);
     tctx.stroke();
+    // the sticker on the real Getsukō lid, turned right side up
+    if (IMAGES.redSticker) {
+      const w = 470;
+      const h = (w * IMAGES.redSticker.height) / IMAGES.redSticker.width;
+      tctx.drawImage(IMAGES.redSticker, 512 - w / 2, 512 - h / 2, w, h);
+    }
   }
 
   // ── lid underside ("Powered by matcha") ────────────────
@@ -389,6 +395,7 @@ export async function ensureFonts() {
   const imgs = Promise.all([
     loadImage(asset("/img/tin/silver-label.png")).then((i) => (IMAGES.label = i)),
     loadImage(asset("/img/tin/silver-sticker.png")).then((i) => (IMAGES.sticker = i)),
+    loadImage(asset("/img/tin/red-sticker.png")).then((i) => (IMAGES.redSticker = i)),
   ]);
   try {
     await Promise.race([
