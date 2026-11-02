@@ -22,3 +22,10 @@ npm run build && npm start
 
 Edit products and prices in `src/lib/products.ts`. Tin artwork is drawn in code in `src/components/three/textures.ts`.
 Product photos in `public/img/` are cropped from the brand's Instagram stories.
+
+## Owner menu (`/admin`)
+
+Open `https://alkuwarik079-gif.github.io/Mm-/admin/` and sign in with a GitHub fine-grained
+token (Only the `Mm-` repository · Contents: Read and write · Actions: Read-only).
+Edits are saved to `src/data/store.json` (photos to `public/img/uploads/`) and the
+Pages workflow republishes the site automatically (~2 minutes).

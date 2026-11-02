@@ -36,6 +36,7 @@ jobs:
         env:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+          NEXT_PUBLIC_GH_REPO: ${{ github.repository }}
       - run: touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
