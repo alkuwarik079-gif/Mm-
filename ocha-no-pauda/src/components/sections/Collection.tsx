@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MATCHAS, formatQAR, type Flavor } from "@/lib/products";
+import { MATCHAS, ALL_PRODUCTS, formatQAR, type Flavor } from "@/lib/products";
 import { useVariant } from "@/lib/useVariant";
 import { variantStore } from "@/lib/scene-state";
 import { useCart } from "@/lib/cart";
@@ -28,7 +28,9 @@ export default function Collection() {
   const [added, setAdded] = useState(false);
   const [craving, setCraving] = useState<string | null>(null);
 
+  const soldOut = !!ALL_PRODUCTS.find((p) => p.id === m.id)?.soldOut;
   const addToBag = () => {
+    if (soldOut) return;
     add(m.id, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 1600);
@@ -140,6 +142,7 @@ export default function Collection() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={addToBag}
+                  disabled={soldOut}
                   className="group relative h-12 flex-1 overflow-hidden rounded-full bg-gold px-8 text-[11px] font-semibold uppercase tracking-[0.3em] text-abyss sm:flex-none"
                 >
                   <AnimatePresence mode="wait" initial={false}>
@@ -150,7 +153,7 @@ export default function Collection() {
                       exit={{ y: -16, opacity: 0 }}
                       className="relative z-10 block"
                     >
-                      {added ? "Added ✓" : "Add to bag"}
+                      {soldOut ? "Sold out" : added ? "Added ✓" : "Add to bag"}
                     </motion.span>
                   </AnimatePresence>
                   <span className="absolute inset-0 -translate-x-full bg-gold-soft transition-transform duration-700 ease-luxe group-hover:translate-x-0" />

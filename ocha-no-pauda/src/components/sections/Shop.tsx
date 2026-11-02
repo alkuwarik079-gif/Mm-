@@ -32,6 +32,11 @@ function Card({ p, i }: { p: Product; i: number }) {
         />
         {/* hover light sweep */}
         <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-[1400ms] ease-luxe group-hover:translate-x-full" />
+        {p.soldOut && (
+          <span className="absolute inset-0 grid place-items-center bg-paper/40">
+            <span className="rounded-full bg-abyss px-5 py-2 text-[11px] uppercase tracking-[0.3em] text-cream">Sold out</span>
+          </span>
+        )}
         {p.badge && (
           <span
             dir="auto"
@@ -44,17 +49,19 @@ function Card({ p, i }: { p: Product; i: number }) {
 
         <motion.button
           whileTap={{ scale: 0.96 }}
+          disabled={p.soldOut}
           onClick={() => {
+            if (p.soldOut) return;
             add(p.id);
             setAdded(true);
             setTimeout(() => setAdded(false), 1500);
           }}
           className="absolute inset-x-4 bottom-4 translate-y-0 overflow-hidden rounded-full bg-forest py-3.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-cream opacity-100 transition-all duration-700 ease-luxe hover:bg-gold hover:text-abyss md:translate-y-[140%] md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
-          aria-label={`Add ${p.name} to bag`}
+          aria-label={p.soldOut ? `${p.name} is sold out` : `Add ${p.name} to bag`}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span key={added ? "a" : "b"} initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }} className="block">
-              {added ? "Added ✓" : "Add to bag"}
+              {p.soldOut ? "Sold out" : added ? "Added ✓" : "Add to bag"}
             </motion.span>
           </AnimatePresence>
         </motion.button>
