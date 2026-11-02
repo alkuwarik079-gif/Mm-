@@ -23,6 +23,7 @@ const pxPerUnit = (v: TinVariant) => BODY_W / (Math.PI * 2 * TIN_DIMS[v].r);
 let SERIF = '"Times New Roman", serif';
 let SANS = '"Helvetica Neue", Arial, sans-serif';
 let JP = '"Hiragino Mincho ProN", "Yu Mincho", serif';
+let TIN = SERIF;
 
 /** next/font hashes family names, so read the real stacks from CSS variables */
 function resolveFonts() {
@@ -31,6 +32,7 @@ function resolveFonts() {
   SERIF = v("--font-serif", SERIF);
   SANS = v("--font-sans", SANS);
   JP = v("--font-jp", JP);
+  TIN = v("--font-tin", SERIF);
 }
 
 function canvas(w: number, h: number) {
@@ -253,23 +255,18 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
     mctx.fillStyle = "rgb(0,40,60)";
     mctx.fillRect(0, 0, BODY_W, BODY_H);
 
-    // champagne-gold print, positioned like the real tin
+    // white print in a calligraphic upright serif, positioned like the real tin
     for (const [k, isMask] of [
       [ctx, false],
       [mctx, true],
     ] as const) {
-      if (isMask) k.fillStyle = "rgb(0,80,110)";
-      else {
-        const gg = k.createLinearGradient(0, BODY_H * 0.45, 0, BODY_H * 0.8);
-        gg.addColorStop(0, "#f6e6b8");
-        gg.addColorStop(1, "#e2c88e");
-        k.fillStyle = gg;
-      }
+      // printed ink: not metallic, slightly satin
+      k.fillStyle = isMask ? "rgb(0,105,0)" : "#f4efe6";
       k.textAlign = "center";
       k.textBaseline = "alphabetic";
-      k.font = `500 ${Math.round(0.2 * PX)}px ${SERIF}`;
+      k.font = `500 ${Math.round(0.21 * PX)}px ${TIN}`;
       k.fillText("Ocha no Pauda", cx, BODY_H * 0.57);
-      k.font = `500 ${Math.round(0.075 * PX)}px ${SERIF}`;
+      k.font = `500 ${Math.round(0.075 * PX)}px ${TIN}`;
       const sub = "GETSUKŌ";
       const spacing = 0.012 * PX;
       const widths = [...sub].map((ch) => k.measureText(ch).width);
@@ -281,11 +278,11 @@ export function makeTinTextures(variant: TinVariant): TinTextures {
         x += widths[i] + spacing;
       });
       k.textAlign = "center";
-      k.font = `500 ${Math.round(0.075 * PX)}px ${SERIF}`;
+      k.font = `500 ${Math.round(0.075 * PX)}px ${TIN}`;
       k.fillText("30 g", cx, BODY_H * 0.79);
 
       // side print
-      k.font = `500 ${Math.round(0.05 * PX)}px ${SERIF}`;
+      k.font = `500 ${Math.round(0.05 * PX)}px ${TIN}`;
       k.fillText("Imperial Grade Matcha", BODY_W * 0.17, BODY_H * 0.55);
       k.fillText("Okumidori · Yabukita", BODY_W * 0.17, BODY_H * 0.62);
       k.fillText("Yame, Fukuoka · Japan", BODY_W * 0.17, BODY_H * 0.69);
@@ -360,6 +357,7 @@ export async function ensureFonts() {
         document.fonts.load(`600 40px ${SERIF}`, sample),
         document.fonts.load(`italic 800 40px ${SANS}`, sample),
         document.fonts.load(`500 40px ${JP}`, sample),
+        document.fonts.load(`500 40px ${TIN}`, sample),
         document.fonts.load(`600 40px ${JP}`, sample),
       ]),
       new Promise((r) => setTimeout(r, 2500)),
