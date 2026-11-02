@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PRODUCTS, formatQAR, type Product } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 
-const FILTERS = ["All", "Matcha", "Ritual", "Oat Milk"] as const;
+const FILTERS = ["All", "Matcha", "Ritual", "Syrup", "Oat Milk"] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 function Card({ p, i }: { p: Product; i: number }) {

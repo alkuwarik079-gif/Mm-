@@ -16,7 +16,7 @@ const STEPS = [
   { n: "一", jp: "篩", t: "Sift", m: "2 g", d: "Two bamboo scoops of matcha, sifted into a warmed chawan so not a single lump survives." },
   { n: "二", jp: "湯", t: "Pour", m: "70 ml · 75–80 °C", d: "Hot — never boiling — water. Too hot and you lose the sweetness; this is where umami lives." },
   { n: "三", jp: "点", t: "Whisk", m: "15–20 s", d: "Quick M-shaped strokes from the wrist with the chasen, until a fine, velvety micro-foam rises." },
-  { n: "四", jp: "乳", t: "Finish", m: "Over ice", d: "Savour it straight, or pour over ice with Oatside Barista or No Moo oat milk for the creamiest latte." },
+  { n: "四", jp: "乳", t: "Finish", m: "Over ice", d: "Savour it straight, or pour over ice with Oatside Barista or No Moo oat milk and a drizzle of Okinawa brown sugar syrup." },
 ];
 
 export default function Ritual() {

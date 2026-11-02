@@ -71,7 +71,7 @@ export type Product = {
   subtitle: string;
   price: number;
   image: string;
-  category: "Matcha" | "Ritual" | "Oat Milk";
+  category: "Matcha" | "Ritual" | "Syrup" | "Oat Milk";
   badge?: string;
   note?: string;
   noteDir?: "rtl";
@@ -115,6 +115,17 @@ export const PRODUCTS: Product[] = [
     price: 45,
     image: "/img/cup.jpg",
     category: "Ritual",
+  },
+  {
+    id: "syrup",
+    name: "Brown Sugar Syrup",
+    subtitle: "Okinawa, Japan · honey-bear bottle",
+    price: 45,
+    image: "/img/syrup.jpg",
+    category: "Syrup",
+    badge: "New",
+    note: "Deep, caramel-like kokuto sweetness — made for matcha lattes.",
+    light: true,
   },
   {
     id: "oatside",
