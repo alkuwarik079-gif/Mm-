@@ -16,27 +16,13 @@ import {
   writeJson,
   type RunState,
 } from "@/lib/github";
+import { MAX_TRIES, WrongPin, forgetKey, hasLockedKey, lockKey, takeLegacyKey, unlockKey } from "@/lib/pinlock";
 
 type StoreMatcha = Omit<Matcha, "price">;
 type Store = { matchas: StoreMatcha[]; products: Product[] };
 
-const TOKEN_KEY = "onp-owner-key";
 const CATEGORIES: Product["category"][] = ["Matcha", "Ritual", "Syrup", "Oat Milk"];
 const FLAVORS: (keyof Flavor)[] = ["umami", "sweetness", "bitterness", "aroma", "creaminess"];
-
-const readToken = () => {
-  try {
-    return localStorage.getItem(TOKEN_KEY) || "";
-  } catch {
-    return "";
-  }
-};
-const saveToken = (t: string) => {
-  try {
-    if (t) localStorage.setItem(TOKEN_KEY, t);
-    else localStorage.removeItem(TOKEN_KEY);
-  } catch {}
-};
 
 const slug = (s: string) =>
   s
@@ -80,7 +66,7 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) =
 
 /* ──────────────────────────────── sign-in ──────────────────────────────── */
 
-function SignIn({ onSignedIn }: { onSignedIn: (t: string) => void }) {
+function SignIn({ onSignedIn, notice }: { onSignedIn: (t: string) => void; notice?: string }) {
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -91,7 +77,6 @@ function SignIn({ onSignedIn }: { onSignedIn: (t: string) => void }) {
     setBusy(true);
     try {
       await checkToken(key.trim());
-      saveToken(key.trim());
       onSignedIn(key.trim());
     } catch (e) {
       setErr(e instanceof Error ? e.message : "That key didn't work.");
@@ -105,9 +90,10 @@ function SignIn({ onSignedIn }: { onSignedIn: (t: string) => void }) {
       <p className="font-mincho text-sm tracking-[0.4em] text-gold">管理</p>
       <h1 className="mt-3 font-display text-5xl font-light italic">Owner menu</h1>
       <p className="mt-4 text-sm leading-relaxed text-cream/65">
-        Sign in with your GitHub key. It stays on this device only. Changes you save here update the live website in about 2 minutes.
+        First time on this phone: paste your GitHub key once. Next you’ll choose a PIN, and after that you only need the PIN. Changes you save update the live website in about 2 minutes.
       </p>
 
+      {notice && <p className="mt-6 rounded-lg bg-lacquer/20 px-3 py-2 text-sm text-cream">{notice}</p>}
       <form onSubmit={submit} className="mt-8 space-y-4">
         <Label title="GitHub key">
           <input
@@ -528,12 +514,12 @@ function OwnerMenu({ token, signOut }: { token: string; signOut: () => void }) {
           </a>
           <button
             onClick={() => {
-              if (dirty && !confirm("You have unsaved changes. Sign out anyway?")) return;
+              if (dirty && !confirm("You have unsaved changes. Lock anyway?")) return;
               signOut();
             }}
             className="rounded-full border border-cream/15 px-4 py-2 text-xs"
           >
-            Sign out
+            Lock
           </button>
         </div>
       </header>
@@ -619,26 +605,125 @@ function OwnerMenu({ token, signOut }: { token: string; signOut: () => void }) {
   );
 }
 
+/* ────────────────────────────── PIN screens ────────────────────────────── */
+
+const pinField = `${field} text-center text-2xl tracking-[0.6em]`;
+const onlyDigits = (v: string) => v.replace(/\D/g, "").slice(0, 8);
+
+function SetPin({ token, onDone }: { token: string; onDone: () => void }) {
+  const [pin, setPin] = useState("");
+  const [again, setAgain] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pin.length < 4) return setErr("Use at least 4 numbers.");
+    if (pin !== again) return setErr("The two PINs don’t match.");
+    setBusy(true);
+    try {
+      await lockKey(token, pin);
+      onDone();
+    } catch {
+      setErr("Couldn’t save the PIN on this phone. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-sm px-5 py-16">
+      <p className="font-mincho text-sm tracking-[0.4em] text-gold">暗証番号</p>
+      <h1 className="mt-3 font-display text-5xl font-light italic">Choose a PIN</h1>
+      <p className="mt-4 text-sm leading-relaxed text-cream/65">
+        From now on you’ll open the owner menu on this phone with this PIN. It never leaves this phone.
+      </p>
+      <form onSubmit={submit} className="mt-8 space-y-4">
+        <Label title="New PIN (4–8 numbers)">
+          <input className={pinField} type="password" inputMode="numeric" autoComplete="new-password" value={pin} onChange={(e) => setPin(onlyDigits(e.target.value))} required />
+        </Label>
+        <Label title="Type it again">
+          <input className={pinField} type="password" inputMode="numeric" autoComplete="new-password" value={again} onChange={(e) => setAgain(onlyDigits(e.target.value))} required />
+        </Label>
+        {err && <p className="rounded-lg bg-lacquer/20 px-3 py-2 text-sm text-cream">{err}</p>}
+        <button disabled={busy} className="w-full rounded-full bg-gold py-3.5 text-xs font-semibold uppercase tracking-[0.25em] text-abyss disabled:opacity-60">
+          {busy ? "Saving…" : "Save PIN"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function Unlock({ onUnlocked, onForget }: { onUnlocked: (t: string) => void; onForget: (msg?: string) => void }) {
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr("");
+    setBusy(true);
+    try {
+      onUnlocked(await unlockKey(pin));
+    } catch (e) {
+      setPin("");
+      if (e instanceof WrongPin && e.triesLeft === 0) onForget(`Too many wrong PINs (${MAX_TRIES}), so this phone forgot your key. Paste your GitHub key again.`);
+      else setErr(e instanceof Error ? e.message : "Wrong PIN.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-sm px-5 py-16">
+      <p className="font-mincho text-sm tracking-[0.4em] text-gold">管理</p>
+      <h1 className="mt-3 font-display text-5xl font-light italic">Owner menu</h1>
+      <form onSubmit={submit} className="mt-8 space-y-4">
+        <Label title="Enter your PIN">
+          <input className={pinField} type="password" inputMode="numeric" autoComplete="current-password" autoFocus value={pin} onChange={(e) => setPin(onlyDigits(e.target.value))} required />
+        </Label>
+        {err && <p className="rounded-lg bg-lacquer/20 px-3 py-2 text-sm text-cream">{err}</p>}
+        <button disabled={busy || pin.length < 4} className="w-full rounded-full bg-gold py-3.5 text-xs font-semibold uppercase tracking-[0.25em] text-abyss disabled:opacity-60">
+          {busy ? "Opening…" : "Open"}
+        </button>
+      </form>
+      <button
+        onClick={() => confirm("Forget the key on this phone? You’ll need to paste your GitHub key again.") && onForget()}
+        className="mt-8 text-xs text-cream/45 underline"
+      >
+        Forgot PIN? Use my GitHub key instead
+      </button>
+    </div>
+  );
+}
+
+type Phase =
+  | { at: "loading" }
+  | { at: "key"; notice?: string }
+  | { at: "set-pin"; token: string }
+  | { at: "pin" }
+  | { at: "menu"; token: string };
+
 export default function AdminPage() {
-  const [token, setToken] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>({ at: "loading" });
 
   useEffect(() => {
-    setToken(readToken());
+    const legacy = takeLegacyKey();
+    if (legacy) setPhase({ at: "set-pin", token: legacy });
+    else setPhase(hasLockedKey() ? { at: "pin" } : { at: "key" });
   }, []);
+
+  const forget = (notice?: string) => {
+    forgetKey();
+    setPhase({ at: "key", notice });
+  };
 
   return (
     <main className="min-h-[100svh] bg-abyss text-cream">
-      {token === null ? null : token ? (
-        <OwnerMenu
-          token={token}
-          signOut={() => {
-            saveToken("");
-            setToken("");
-          }}
-        />
-      ) : (
-        <SignIn onSignedIn={setToken} />
-      )}
+      {phase.at === "key" && <SignIn notice={phase.notice} onSignedIn={(token) => setPhase({ at: "set-pin", token })} />}
+      {phase.at === "set-pin" && <SetPin token={phase.token} onDone={() => setPhase({ at: "menu", token: phase.token })} />}
+      {phase.at === "pin" && <Unlock onUnlocked={(token) => setPhase({ at: "menu", token })} onForget={forget} />}
+      {phase.at === "menu" && <OwnerMenu token={phase.token} signOut={() => setPhase(hasLockedKey() ? { at: "pin" } : { at: "key" })} />}
     </main>
   );
 }
