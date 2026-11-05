@@ -1,4 +1,8 @@
 {
+  "settings": {
+    "whatsapp": "",
+    "emailKey": ""
+  },
   "matchas": [
     {
       "id": "getsuko",

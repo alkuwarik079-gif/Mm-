@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
-import { formatQAR, productById } from "@/lib/products";
+import { SETTINGS, formatQAR, productById } from "@/lib/products";
+import { emailOrder, newOrderId, orderText, whatsappLink, type Order } from "@/lib/orders";
 import { lenis } from "./SmoothScroll";
 
 type Step = "bag" | "details" | "done";
@@ -12,7 +13,7 @@ type Step = "bag" | "details" | "done";
 export default function CartDrawer() {
   const { open, setOpen, lines, subtotal, count, setQty, remove, clear } = useCart();
   const [step, setStep] = useState<Step>("bag");
-  const [order, setOrder] = useState<string | null>(null);
+  const [order, setOrder] = useState<{ id: string; wa: string | null } | null>(null);
   const [placing, setPlacing] = useState(false);
 
   useEffect(() => {
@@ -33,15 +34,28 @@ export default function CartDrawer() {
     return () => window.removeEventListener("keydown", onKey);
   }, [setOpen]);
 
-  const placeOrder = (e: React.FormEvent) => {
+  const placeOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const get = (k: string) => String(f.get(k) || "").trim();
+    const o: Order = {
+      id: newOrderId(),
+      lines: lines.map((l) => {
+        const p = productById(l.id)!;
+        return { name: p.name, qty: l.qty, price: p.price };
+      }),
+      subtotal,
+      customer: { name: get("name"), phone: get("phone"), email: get("email"), address: get("address") },
+    };
     setPlacing(true);
-    setTimeout(() => {
-      setOrder(`ONP-${Math.floor(100000 + Math.random() * 900000)}`);
-      clear();
-      setPlacing(false);
-      setStep("done");
-    }, 1400);
+    // email the owner straight away (if set up in the owner menu)
+    if (SETTINGS.emailKey) await emailOrder(SETTINGS.emailKey, o);
+    // and/or hand the order to WhatsApp, addressed to the owner
+    const wa = SETTINGS.whatsapp ? whatsappLink(SETTINGS.whatsapp, orderText(o)) : null;
+    setOrder({ id: o.id, wa });
+    clear();
+    setPlacing(false);
+    setStep("done");
   };
 
   return (
@@ -189,8 +203,27 @@ export default function CartDrawer() {
                       <motion.circle cx="42" cy="42" r="40" fill="none" stroke="currentColor" strokeWidth="1" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2 }} />
                       <motion.path d="M27 43l10 10 20-22" fill="none" stroke="currentColor" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.8, duration: 0.6 }} />
                     </motion.svg>
-                    <p className="mt-8 font-display text-3xl italic">She&apos;s on her way.</p>
-                    <p className="mt-3 text-sm text-cream/60">Order {order} is confirmed.</p>
+                    {order?.wa ? (
+                      <>
+                        <p className="mt-8 font-display text-3xl italic">One last step.</p>
+                        <p className="mt-3 max-w-xs text-sm text-cream/60">
+                          Send order {order.id} to us on WhatsApp — it&apos;s all filled in, just tap Send.
+                        </p>
+                        <a
+                          href={order.wa}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-6 inline-flex items-center gap-3 rounded-full bg-[#25D366] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#062b16]"
+                        >
+                          Send on WhatsApp
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-8 font-display text-3xl italic">She&apos;s on her way.</p>
+                        <p className="mt-3 text-sm text-cream/60">Order {order?.id} is confirmed.</p>
+                      </>
+                    )}
                     <p className="mt-1 font-mincho text-sm tracking-[0.3em] text-gold/80">ありがとうございます</p>
                   </motion.div>
                 )}
