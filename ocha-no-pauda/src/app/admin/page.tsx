@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Flavor, Matcha, Product, Settings } from "@/lib/products";
-import { emailOrder, newOrderId, normalizeWhatsapp, orderText, whatsappLink, type Order } from "@/lib/orders";
+import { autoWhatsapp, emailOrder, newOrderId, normalizeWhatsapp, orderText, whatsappLink, type Order } from "@/lib/orders";
 import { resolveImage } from "@/lib/products";
 import { asset } from "@/lib/asset";
 import {
@@ -302,7 +302,12 @@ const TEST_ORDER: Order = {
 function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settings>) => void }) {
   const [open, setOpen] = useState(!s.whatsapp && !s.emailKey);
   const [test, setTest] = useState("");
-  const on = [s.whatsapp && "WhatsApp", s.emailKey && "Email"].filter(Boolean).join(" + ");
+  const on = [
+    s.whatsapp && (s.autoWhatsappKey ? "Automatic WhatsApp" : "WhatsApp (customer sends)"),
+    s.emailKey && "Email",
+  ]
+    .filter(Boolean)
+    .join(" + ");
   return (
     <li className={`rounded-2xl border bg-forest/70 ${on ? "border-cream/10" : "border-gold/60"}`}>
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-4 p-4 text-left">
@@ -316,7 +321,7 @@ function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settin
       {open && (
         <div className="space-y-5 border-t border-cream/10 p-4">
           <div className="space-y-2">
-            <Label title="Your phone number (WhatsApp & text messages)" hint="With country code, e.g. 974 5555 1234. Customers send their order to this number by WhatsApp or text message (iMessage/SMS) in one tap.">
+            <Label title="Your WhatsApp number" hint="With country code, e.g. 974 5555 1234.">
               <input
                 className={field}
                 type="tel"
@@ -326,7 +331,7 @@ function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settin
                 onChange={(e) => update({ whatsapp: e.target.value.replace(/[^\d+ ]/g, "") })}
               />
             </Label>
-            {s.whatsapp && (
+            {s.whatsapp && !s.autoWhatsappKey && (
               <a
                 href={whatsappLink(s.whatsapp, orderText(TEST_ORDER))}
                 target="_blank"
@@ -335,6 +340,51 @@ function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settin
               >
                 Test WhatsApp → opens a chat with +{normalizeWhatsapp(s.whatsapp)}
               </a>
+            )}
+          </div>
+
+          <div className="space-y-2 border-t border-cream/10 pt-4">
+            <Label
+              title="Automatic WhatsApp key (CallMeBot)"
+              hint="With this key, every order is sent to your WhatsApp automatically — from CallMeBot, not from the customer."
+            >
+              <input
+                className={field}
+                autoComplete="off"
+                inputMode="numeric"
+                placeholder="e.g. 123456"
+                value={s.autoWhatsappKey}
+                onChange={(e) => update({ autoWhatsappKey: e.target.value.trim() })}
+              />
+            </Label>
+            <details className="text-xs leading-relaxed text-cream/55">
+              <summary className="cursor-pointer text-cream/75">How do I get this key? (free, 2 minutes)</summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>
+                  Open{" "}
+                  <a className="text-gold underline" href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" rel="noreferrer">
+                    CallMeBot’s WhatsApp page
+                  </a>{" "}
+                  and save the phone number it shows into your contacts.
+                </li>
+                <li>
+                  From <b>your</b> WhatsApp, send that contact exactly: <b>I allow callmebot to send me messages</b>
+                </li>
+                <li>It replies with your API key (a number). Paste it above.</li>
+              </ol>
+            </details>
+            {s.whatsapp && s.autoWhatsappKey && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setTest("Sending a test WhatsApp…");
+                  await autoWhatsapp(s.whatsapp, s.autoWhatsappKey, orderText({ ...TEST_ORDER, id: newOrderId() }));
+                  setTest("Sent — check your WhatsApp in a few seconds. Nothing arrived? Check the number and key.");
+                }}
+                className="rounded-full border border-cream/20 px-4 py-2 text-xs"
+              >
+                Send a test WhatsApp
+              </button>
             )}
           </div>
 
@@ -627,9 +677,9 @@ function OwnerMenu({ token, signOut }: { token: string; signOut: () => void }) {
             <h2 className="mb-3 text-[11px] uppercase tracking-[0.3em] text-cream/50">When something sells</h2>
             <ul>
               <AlertsCard
-                s={{ whatsapp: "", emailKey: "", ...(store.settings || {}) }}
+                s={{ whatsapp: "", emailKey: "", autoWhatsappKey: "", ...(store.settings || {}) }}
                 update={(patch) =>
-                  setStore((st) => (st ? { ...st, settings: { whatsapp: "", emailKey: "", ...(st.settings || {}), ...patch } } : st))
+                  setStore((st) => (st ? { ...st, settings: { whatsapp: "", emailKey: "", autoWhatsappKey: "", ...(st.settings || {}), ...patch } } : st))
                 }
               />
             </ul>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
 import { SETTINGS, formatQAR, productById } from "@/lib/products";
-import { emailOrder, newOrderId, orderText, smsLink, whatsappLink, type Order } from "@/lib/orders";
+import { autoWhatsapp, emailOrder, newOrderId, orderText, smsLink, whatsappLink, type Order } from "@/lib/orders";
 import { lenis } from "./SmoothScroll";
 
 type Step = "bag" | "details" | "done";
@@ -50,9 +50,12 @@ export default function CartDrawer() {
     setPlacing(true);
     // email the owner straight away (if set up in the owner menu)
     if (SETTINGS.emailKey) await emailOrder(SETTINGS.emailKey, o);
-    // and/or hand the order to WhatsApp, addressed to the owner
-    const wa = SETTINGS.whatsapp ? whatsappLink(SETTINGS.whatsapp, orderText(o)) : null;
-    const sms = SETTINGS.whatsapp ? smsLink(SETTINGS.whatsapp, orderText(o)) : null;
+    // automatic WhatsApp to the owner (CallMeBot) — the customer doesn't send anything
+    const auto = !!(SETTINGS.whatsapp && SETTINGS.autoWhatsappKey);
+    if (auto) await autoWhatsapp(SETTINGS.whatsapp, SETTINGS.autoWhatsappKey, orderText(o));
+    // otherwise hand the order to the customer's WhatsApp / Messages, addressed to the owner
+    const wa = SETTINGS.whatsapp && !auto ? whatsappLink(SETTINGS.whatsapp, orderText(o)) : null;
+    const sms = SETTINGS.whatsapp && !auto ? smsLink(SETTINGS.whatsapp, orderText(o)) : null;
     setOrder({ id: o.id, wa, sms });
     clear();
     setPlacing(false);

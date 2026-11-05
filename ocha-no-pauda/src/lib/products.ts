@@ -72,8 +72,10 @@ export type Settings = {
   whatsapp: string;
   /** Web3Forms access key — orders are emailed to the owner when set */
   emailKey: string;
+  /** CallMeBot API key — orders are sent to the owner's WhatsApp automatically when set */
+  autoWhatsappKey: string;
 };
 
-export const SETTINGS: Settings = { whatsapp: "", emailKey: "", ...((store as { settings?: Partial<Settings> }).settings || {}) };
+export const SETTINGS: Settings = { whatsapp: "", emailKey: "", autoWhatsappKey: "", ...((store as { settings?: Partial<Settings> }).settings || {}) };
 
 export const formatQAR = (n: number) => `${n.toLocaleString("en-US")} QAR`;

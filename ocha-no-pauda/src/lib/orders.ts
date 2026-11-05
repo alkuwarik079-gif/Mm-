@@ -69,3 +69,18 @@ export async function emailOrder(accessKey: string, o: Order, subjectPrefix = "N
 }
 
 export const newOrderId = () => `ONP-${Math.floor(100000 + Math.random() * 900000)}`;
+
+/**
+ * Sends the order to the owner's own WhatsApp automatically through CallMeBot
+ * (a free service that messages you from its number). The browser can't read
+ * CallMeBot's reply (no CORS), so this is fire-and-forget.
+ */
+export async function autoWhatsapp(number: string, apiKey: string, text: string) {
+  if (!number || !apiKey) return;
+  const url =
+    `https://api.callmebot.com/whatsapp.php?phone=${normalizeWhatsapp(number)}` +
+    `&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apiKey)}`;
+  try {
+    await Promise.race([fetch(url, { mode: "no-cors", keepalive: true }), new Promise((r) => setTimeout(r, 6000))]);
+  } catch {}
+}
