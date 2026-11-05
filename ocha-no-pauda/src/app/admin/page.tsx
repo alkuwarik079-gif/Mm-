@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Flavor, Matcha, Product } from "@/lib/products";
+import type { Flavor, Matcha, Product, Settings } from "@/lib/products";
+import { emailOrder, newOrderId, normalizeWhatsapp, orderText, whatsappLink, type Order } from "@/lib/orders";
 import { resolveImage } from "@/lib/products";
 import { asset } from "@/lib/asset";
 import {
@@ -19,7 +20,7 @@ import {
 import { MAX_TRIES, WrongPin, forgetKey, hasLockedKey, lockKey, takeLegacyKey, unlockKey } from "@/lib/pinlock";
 
 type StoreMatcha = Omit<Matcha, "price">;
-type Store = { matchas: StoreMatcha[]; products: Product[] };
+type Store = { settings?: Settings; matchas: StoreMatcha[]; products: Product[] };
 
 const CATEGORIES: Product["category"][] = ["Matcha", "Ritual", "Syrup", "Oat Milk"];
 const FLAVORS: (keyof Flavor)[] = ["umami", "sweetness", "bitterness", "aroma", "creaminess"];
@@ -291,6 +292,98 @@ function ProductCard({
   );
 }
 
+const TEST_ORDER: Order = {
+  id: "TEST-0001",
+  lines: [{ name: "Getsukō (test)", qty: 1, price: 185 }],
+  subtotal: 185,
+  customer: { name: "Test customer", phone: "—", email: "", address: "This is a test from the owner menu" },
+};
+
+function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settings>) => void }) {
+  const [open, setOpen] = useState(!s.whatsapp && !s.emailKey);
+  const [test, setTest] = useState("");
+  const on = [s.whatsapp && "WhatsApp", s.emailKey && "Email"].filter(Boolean).join(" + ");
+  return (
+    <li className={`rounded-2xl border bg-forest/70 ${on ? "border-cream/10" : "border-gold/60"}`}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-4 p-4 text-left">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold/15 text-xl">🔔</span>
+        <span className="flex-1">
+          <span className="block font-display text-xl">Order alerts</span>
+          <span className={`block text-xs ${on ? "text-[#9bd8a6]" : "text-gold"}`}>{on ? `On: ${on}` : "Off — you won’t hear about new orders yet"}</span>
+        </span>
+        <span className="text-cream/40">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="space-y-5 border-t border-cream/10 p-4">
+          <div className="space-y-2">
+            <Label title="Your WhatsApp number" hint="With country code, e.g. 974 5555 1234. Customers send their order to this number in one tap.">
+              <input
+                className={field}
+                type="tel"
+                inputMode="tel"
+                placeholder="974 …"
+                value={s.whatsapp}
+                onChange={(e) => update({ whatsapp: e.target.value.replace(/[^\d+ ]/g, "") })}
+              />
+            </Label>
+            {s.whatsapp && (
+              <a
+                href={whatsappLink(s.whatsapp, orderText(TEST_ORDER))}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block rounded-full border border-cream/20 px-4 py-2 text-xs"
+              >
+                Test WhatsApp → opens a chat with +{normalizeWhatsapp(s.whatsapp)}
+              </a>
+            )}
+          </div>
+
+          <div className="space-y-2 border-t border-cream/10 pt-4">
+            <Label title="Email alerts key (optional)" hint="Every order is emailed to you automatically.">
+              <input
+                className={field}
+                autoComplete="off"
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                value={s.emailKey}
+                onChange={(e) => update({ emailKey: e.target.value.trim() })}
+              />
+            </Label>
+            <details className="text-xs leading-relaxed text-cream/55">
+              <summary className="cursor-pointer text-cream/75">How do I get this key? (free, 1 minute)</summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>
+                  Open{" "}
+                  <a className="text-gold underline" href="https://web3forms.com" target="_blank" rel="noreferrer">
+                    web3forms.com
+                  </a>{" "}
+                  and tap <b>Create your Access Key</b>.
+                </li>
+                <li>Type the email where you want orders, and submit.</li>
+                <li>Open the email they send you, copy the Access Key, and paste it above.</li>
+              </ol>
+            </details>
+            {s.emailKey && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setTest("Sending test email…");
+                  const ok = await emailOrder(s.emailKey, { ...TEST_ORDER, id: newOrderId() }, "Test order");
+                  setTest(ok ? "Test email sent — check your inbox (and spam)." : "That key didn’t work. Check you copied the whole key.");
+                }}
+                className="rounded-full border border-cream/20 px-4 py-2 text-xs"
+              >
+                Send a test email
+              </button>
+            )}
+            {test && <p className="text-xs text-cream/70">{test}</p>}
+          </div>
+          <p className="text-xs text-cream/45">Press Save at the bottom to switch these on for customers.</p>
+        </div>
+      )}
+    </li>
+  );
+}
+
 function MatchaCard({ m, update }: { m: StoreMatcha; update: (patch: Partial<StoreMatcha>) => void }) {
   const [open, setOpen] = useState(false);
   return (
@@ -531,6 +624,18 @@ function OwnerMenu({ token, signOut }: { token: string; signOut: () => void }) {
       ) : (
         <>
           <section className="mt-8">
+            <h2 className="mb-3 text-[11px] uppercase tracking-[0.3em] text-cream/50">When something sells</h2>
+            <ul>
+              <AlertsCard
+                s={{ whatsapp: "", emailKey: "", ...(store.settings || {}) }}
+                update={(patch) =>
+                  setStore((st) => (st ? { ...st, settings: { whatsapp: "", emailKey: "", ...(st.settings || {}), ...patch } } : st))
+                }
+              />
+            </ul>
+          </section>
+
+          <section className="mt-10">
             <h2 className="mb-3 text-[11px] uppercase tracking-[0.3em] text-cream/50">Matcha tins</h2>
             <ul className="space-y-3">
               {store.matchas.map((m, i) => (

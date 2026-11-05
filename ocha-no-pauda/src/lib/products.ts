@@ -67,4 +67,13 @@ export const PRODUCTS: Product[] = ALL_PRODUCTS.filter((p) => !p.hidden);
 
 export const productById = (id: string) => ALL_PRODUCTS.find((p) => p.id === id && !p.hidden);
 
+export type Settings = {
+  /** owner's WhatsApp number with country code, digits only (e.g. 97455551234) */
+  whatsapp: string;
+  /** Web3Forms access key — orders are emailed to the owner when set */
+  emailKey: string;
+};
+
+export const SETTINGS: Settings = { whatsapp: "", emailKey: "", ...((store as { settings?: Partial<Settings> }).settings || {}) };
+
 export const formatQAR = (n: number) => `${n.toLocaleString("en-US")} QAR`;
