@@ -36,6 +36,9 @@ export function normalizeWhatsapp(raw: string) {
   return d;
 }
 
+/** opens Messages (iMessage on iPhone, SMS elsewhere) with the order filled in */
+export const smsLink = (number: string, text: string) => `sms:+${normalizeWhatsapp(number)}?&body=${encodeURIComponent(text)}`;
+
 export const whatsappLink = (number: string, text: string) => `https://wa.me/${normalizeWhatsapp(number)}?text=${encodeURIComponent(text)}`;
 
 /** emails the order to the owner; resolves true on success */

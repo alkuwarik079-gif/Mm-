@@ -316,7 +316,7 @@ function AlertsCard({ s, update }: { s: Settings; update: (patch: Partial<Settin
       {open && (
         <div className="space-y-5 border-t border-cream/10 p-4">
           <div className="space-y-2">
-            <Label title="Your WhatsApp number" hint="With country code, e.g. 974 5555 1234. Customers send their order to this number in one tap.">
+            <Label title="Your phone number (WhatsApp & text messages)" hint="With country code, e.g. 974 5555 1234. Customers send their order to this number by WhatsApp or text message (iMessage/SMS) in one tap.">
               <input
                 className={field}
                 type="tel"
