@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart";
 import { SETTINGS, formatQAR, productById } from "@/lib/products";
-import { emailOrder, newOrderId, orderText, whatsappLink, type Order } from "@/lib/orders";
+import { emailOrder, newOrderId, orderText, smsLink, whatsappLink, type Order } from "@/lib/orders";
 import { lenis } from "./SmoothScroll";
 
 type Step = "bag" | "details" | "done";
@@ -13,7 +13,7 @@ type Step = "bag" | "details" | "done";
 export default function CartDrawer() {
   const { open, setOpen, lines, subtotal, count, setQty, remove, clear } = useCart();
   const [step, setStep] = useState<Step>("bag");
-  const [order, setOrder] = useState<{ id: string; wa: string | null } | null>(null);
+  const [order, setOrder] = useState<{ id: string; wa: string | null; sms: string | null } | null>(null);
   const [placing, setPlacing] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,8 @@ export default function CartDrawer() {
     if (SETTINGS.emailKey) await emailOrder(SETTINGS.emailKey, o);
     // and/or hand the order to WhatsApp, addressed to the owner
     const wa = SETTINGS.whatsapp ? whatsappLink(SETTINGS.whatsapp, orderText(o)) : null;
-    setOrder({ id: o.id, wa });
+    const sms = SETTINGS.whatsapp ? smsLink(SETTINGS.whatsapp, orderText(o)) : null;
+    setOrder({ id: o.id, wa, sms });
     clear();
     setPlacing(false);
     setStep("done");
@@ -207,7 +208,7 @@ export default function CartDrawer() {
                       <>
                         <p className="mt-8 font-display text-3xl italic">One last step.</p>
                         <p className="mt-3 max-w-xs text-sm text-cream/60">
-                          Send order {order.id} to us on WhatsApp — it&apos;s all filled in, just tap Send.
+                          Send order {order.id} to us — it&apos;s all filled in, just tap Send.
                         </p>
                         <a
                           href={order.wa}
@@ -217,6 +218,11 @@ export default function CartDrawer() {
                         >
                           Send on WhatsApp
                         </a>
+                        {order.sms && (
+                          <a href={order.sms} className="mt-4 text-xs uppercase tracking-[0.2em] text-cream/70 underline underline-offset-4">
+                            or send by text message
+                          </a>
+                        )}
                       </>
                     ) : (
                       <>
