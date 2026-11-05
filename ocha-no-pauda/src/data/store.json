@@ -1,7 +1,8 @@
 {
   "settings": {
     "whatsapp": "",
-    "emailKey": ""
+    "emailKey": "",
+    "autoWhatsappKey": ""
   },
   "matchas": [
     {
